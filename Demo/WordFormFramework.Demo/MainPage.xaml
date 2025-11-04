@@ -1,0 +1,9 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WordFormFramework.Demo.MainPage"
+             Title="Word Form Demo">
+    <VerticalStackLayout Padding="20">
+        <Label Text="WordFormFramework Demo" FontSize="24" HorizontalOptions="Center"/>
+        <Button Text="Open Word File" Clicked="OnOpenClicked"/>
+    </VerticalStackLayout>
+</ContentPage>

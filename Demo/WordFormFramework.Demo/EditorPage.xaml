@@ -1,0 +1,13 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:wf="clr-namespace:WordFormFramework.Controls;assembly=WordFormFramework"
+             x:Class="WordFormFramework.Demo.EditorPage"
+             Title="Editor">
+    <Grid RowDefinitions="Auto, *">
+        <HorizontalStackLayout Padding="8">
+            <Button Text="Save" Clicked="OnSaveClicked"/>
+            <Button Text="Back" Clicked="OnBackClicked"/>
+        </HorizontalStackLayout>
+        <wf:WordFormView x:Name="wordView" Grid.Row="1"/>
+    </Grid>
+</ContentPage>
