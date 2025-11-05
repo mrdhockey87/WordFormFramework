@@ -34,7 +34,7 @@ namespace WordFormFramework
 }
 /*Version history:
  *
- *2.0.5 - Fixed version retrieval to use AssemblyInformationalVersion if available. Also fixed save as issue in the rich text editor so 
+ * 2.0.5 - Fixed version retrieval to use AssemblyInformationalVersion if available. Also fixed save as issue in the rich text editor so 
  *        images are saved correctly without crashing.
  * 1.0.0 - Initial release got framework to open word docx files and convert then to rich text format for editing.
  */
