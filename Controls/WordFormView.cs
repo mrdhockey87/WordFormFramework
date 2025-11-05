@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Devices;
 
 namespace WordFormFramework.Controls;
 
@@ -39,9 +40,8 @@ public partial class WordFormView : ContentView
 
         var bytes = await File.ReadAllBytesAsync(path);
 
-        // Wait for WebView
-        int timeout = 0;
-        while (!_isWebViewReady && timeout < 50)
+        int timeout =0;
+        while (!_isWebViewReady && timeout <50)
         {
             await Task.Delay(100);
             timeout++;
@@ -73,9 +73,8 @@ public partial class WordFormView : ContentView
     {
         try
         {
-            // Wait until WebView2 engine is fully initialized
-            int timeout = 0;
-            while (!_isWebViewReady && timeout < 50)
+            int timeout =0;
+            while (!_isWebViewReady && timeout <50)
             {
                 await Task.Delay(100);
                 timeout++;
@@ -87,7 +86,6 @@ public partial class WordFormView : ContentView
             string base64 = Convert.ToBase64String(docxBytes);
             string js = $"window.importDocxFromBase64('{EscapeJs(base64)}')";
 
-            // Optional: short extra delay to ensure JS context settled
             await Task.Delay(100);
 
             await _webView.EvaluateJavaScriptAsync(js);
@@ -120,8 +118,8 @@ public partial class WordFormView : ContentView
     static string EscapeJs(string s) => s.Replace("\\", "\\\\").Replace("'", "\\'").Replace("\r", "\\r").Replace("\n", "\\n");
     static string UnwrapJs(string s)
     {
-        if (s.Length >= 2 && s.StartsWith("\"") && s.EndsWith("\""))
-            s = s.Substring(1, s.Length - 2).Replace("\\n", "\n").Replace("\\r", "\r").Replace("\\\"", "\"");
+        if (s.Length >=2 && s.StartsWith("\"") && s.EndsWith("\""))
+            s = s.Substring(1, s.Length -2).Replace("\\n", "\n").Replace("\\r", "\r").Replace("\\\"", "\"");
         return s;
     }
 
@@ -129,9 +127,7 @@ public partial class WordFormView : ContentView
     {
         string GetRes(string name)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-
-            // Dynamically find the correct resource name
+            var assembly = typeof(WordFormView).Assembly;
             var resourceName = assembly.GetManifestResourceNames()
                 .FirstOrDefault(r => r.EndsWith(name, StringComparison.OrdinalIgnoreCase));
 
@@ -146,13 +142,14 @@ public partial class WordFormView : ContentView
             return reader.ReadToEnd();
         }
 
-        // Load each embedded file
         var quillCss = GetRes("quill.snow.css");
         var quillJs = GetRes("quill.min.js");
         var mammothJs = GetRes("mammoth.browser.min.js");
         var htmlDocxJs = GetRes("html-docx.js");
 
-        // Build the HTML page injected into the WebView
+        var disableContextMenu = DeviceInfo.Current.Platform == DevicePlatform.MacCatalyst;
+        var disableFlag = disableContextMenu ? "true" : "false";
+
         return $@"
 <!doctype html>
 <html>
@@ -170,50 +167,68 @@ html,body,#editor{{height:100%;margin:0;padding:0;background:white;}}
 <script>{mammothJs}</script>
 <script>{htmlDocxJs}</script>
 <script>
+const DISABLE_CONTEXT_MENU = {disableFlag};
+if (DISABLE_CONTEXT_MENU) {{
+ window.addEventListener('contextmenu', function(e) {{ e.preventDefault(); }}, false);
+}}
+
 var quill;
 (function(){{
-  var toolbarOptions=[[{{'header':[1,2,3,false]}}],['bold','italic','underline'],['link','image'],[{{'list':'ordered'}},{{'list':'bullet'}}],['clean']];
-  quill=new Quill('#editor',{{theme:'snow',modules:{{toolbar:toolbarOptions}}}});
+ var toolbarOptions=[[{{'header':[1,2,3,false]}}],['bold','italic','underline'],['link','image'],[{{'list':'ordered'}},{{'list':'bullet'}}],['clean']];
+ quill=new Quill('#editor',{{theme:'snow',modules:{{toolbar:toolbarOptions}}}});
+
+ // Intercept right-click on images on Windows: provide a custom Save Image action
+ if (!DISABLE_CONTEXT_MENU) {{
+ document.addEventListener('contextmenu', function(e) {{
+ const target = e.target;
+ if (target && target.tagName === 'IMG') {{
+ // Prevent default WebView2 menu, and trigger custom save path via postMessage
+ e.preventDefault();
+ try {{
+ const canvas = document.createElement('canvas');
+ canvas.width = target.naturalWidth || target.width;
+ canvas.height = target.naturalHeight || target.height;
+ const ctx = canvas.getContext('2d');
+ ctx.drawImage(target,0,0);
+ const dataUrl = canvas.toDataURL('image/png');
+ const payload = JSON.stringify({{ type: 'saveImage', dataUrl }});
+ window.chrome?.webview?.postMessage(payload);
+ }} catch {{}}
+ }}
+ }}, false);
+ }}
 }})();
 
-function blobToBase64(blob){{
-  return new Promise((res,rej)=>{{
-    var reader=new FileReader();
-    reader.onloadend=()=>res(reader.result.split(',')[1]);
-    reader.onerror=rej;
-    reader.readAsDataURL(blob);
-  }});
+function blobToBase64(blob) {{
+ return new Promise((res,rej) => {{
+ var reader = new FileReader();
+ reader.onloadend = () => res(reader.result.split(',')[1]);
+ reader.onerror = rej;
+ reader.readAsDataURL(blob);
+ }});
 }}
 
 window.importDocxFromBase64 = async function(b64) {{
-  try {{
-    console.log(""Importing DOCX ("" + b64.length + "" base64 chars)"");
-    var bin = atob(b64);
-    var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-
-    console.log(""Converting DOCX to HTML..."");
-    var result = await mammoth.convertToHtml({{ arrayBuffer: bytes.buffer }});
-
-    console.log(""Conversion complete. HTML length: "" + (result.value?.length || 0));
-    quill.root.innerHTML = result.value || ""<p><em>No content</em></p>"";
-    return true;
-  }} catch (e) {{
-    console.error(""Import failed:"", e);
-    return false;
-  }}
+ try {{
+ var bin = atob(b64);
+ var bytes = new Uint8Array(bin.length);
+ for (var i =0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+ var result = await mammoth.convertToHtml({{ arrayBuffer: bytes.buffer }});
+ quill.root.innerHTML = result.value || '<p><em>No content</em></p>';
+ return true;
+ }} catch (e) {{ return false; }}
 }};
 
-window.getEditorHtml=function(){{return quill.root.innerHTML;}};
-window.setEditorHtml=function(html){{quill.root.innerHTML=html||'';}};
+window.getEditorHtml = function() {{ return quill.root.innerHTML; }};
+window.setEditorHtml = function(html) {{ quill.root.innerHTML = html || ''; }};
 
-window.exportDocx=async function(){{
-  try{{
-    var html='<html><body>'+quill.root.innerHTML+'</body></html>';
-    var blob=htmlDocx.asBlob(html);
-    var base64=await blobToBase64(blob);
-    return base64;
-  }}catch(e){{console.error(e);return '';}}
+window.exportDocx = async function() {{
+ try {{
+ var html = '<html><body>' + quill.root.innerHTML + '</body></html>';
+ var blob = htmlDocx.asBlob(html);
+ var base64 = await blobToBase64(blob);
+ return base64;
+ }} catch (e) {{ return ''; }}
 }}
 </script>
 </body>
