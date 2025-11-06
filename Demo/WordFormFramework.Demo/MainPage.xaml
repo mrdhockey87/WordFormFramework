@@ -2,8 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WordFormFramework.Demo.MainPage"
              Title="Word Form Demo">
-    <VerticalStackLayout Padding="20">
+    <VerticalStackLayout Padding="20" Spacing="12">
         <Label Text="WordFormFramework Demo" FontSize="24" HorizontalOptions="Center"/>
-        <Button Text="Open Word File" Clicked="OnOpenClicked"/>
+        <Button Text="Open Word File (.docx)" Clicked="OnOpenClicked"/>
+        <Button Text="Open RTF (Prompt Lock Toggle)" Clicked="OnOpenRtfPromptClicked"/>
+        <Button Text="Open RTF (Locked - No Toggle)" Clicked="OnOpenRtfLockedClicked"/>
     </VerticalStackLayout>
 </ContentPage>

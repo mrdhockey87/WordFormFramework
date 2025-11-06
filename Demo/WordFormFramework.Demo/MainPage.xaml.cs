@@ -42,7 +42,67 @@ public partial class MainPage : ContentPage
                 return;
             }
 
-            await Navigation.PushAsync(new EditorPage(result.FullPath));
+            await Navigation.PushAsync(new EditorPage(result.FullPath, isRtf:false));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
+    }
+
+    private async void OnOpenRtfPromptClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var rtfType = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.iOS, new[] { "public.rtf" } },
+                { DevicePlatform.MacCatalyst, new[] { "public.rtf" } },
+                { DevicePlatform.Android, new[] { "application/rtf", "text/rtf" } },
+                { DevicePlatform.WinUI, new[] { ".rtf" } },
+            });
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Select an RTF document (Prompt Lock Toggle)",
+                FileTypes = rtfType
+            });
+            if (result == null) return;
+            if (!result.FileName.EndsWith(".rtf", StringComparison.OrdinalIgnoreCase))
+            {
+                await DisplayAlert("Unsupported file", "Please select a .rtf file.", "OK");
+                return;
+            }
+            await Navigation.PushAsync(new EditorPage(result.FullPath, isRtf:true, promptLockToggle:true));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
+    }
+
+    private async void OnOpenRtfLockedClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var rtfType = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.iOS, new[] { "public.rtf" } },
+                { DevicePlatform.MacCatalyst, new[] { "public.rtf" } },
+                { DevicePlatform.Android, new[] { "application/rtf", "text/rtf" } },
+                { DevicePlatform.WinUI, new[] { ".rtf" } },
+            });
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Select an RTF document (Locked - No Toggle)",
+                FileTypes = rtfType
+            });
+            if (result == null) return;
+            if (!result.FileName.EndsWith(".rtf", StringComparison.OrdinalIgnoreCase))
+            {
+                await DisplayAlert("Unsupported file", "Please select a .rtf file.", "OK");
+                return;
+            }
+            await Navigation.PushAsync(new EditorPage(result.FullPath, isRtf:true, promptLockToggle:false));
         }
         catch (Exception ex)
         {

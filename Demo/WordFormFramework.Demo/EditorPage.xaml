@@ -4,9 +4,12 @@
              x:Class="WordFormFramework.Demo.EditorPage"
              Title="Editor">
     <Grid RowDefinitions="Auto, *">
-        <HorizontalStackLayout Padding="8">
-            <Button Text="Save" Clicked="OnSaveClicked"/>
+        <HorizontalStackLayout Padding="8" Spacing="8">
+            <Button Text="Save DOCX" Clicked="OnSaveDocxClicked"/>
+            <Button Text="Save RTF" Clicked="OnSaveRtfClicked"/>
             <Button Text="Back" Clicked="OnBackClicked"/>
+            <Button x:Name="btnRtfNoPrompt" Text="RTF (No Prompt)" Clicked="OnOpenRtfNoPrompt"/>
+            <Button x:Name="btnRtfPrompt" Text="RTF (Prompt)" Clicked="OnOpenRtfPrompt"/>
         </HorizontalStackLayout>
         <wf:WordFormView x:Name="wordView" Grid.Row="1"/>
     </Grid>

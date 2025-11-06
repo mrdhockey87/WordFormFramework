@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
@@ -12,9 +12,9 @@
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<!-- Version information -->
 		<!-- Define version components individually -->
-		<VersionMajor>2</VersionMajor>
-		<VersionMinor>0</VersionMinor>
-		<VersionBuild>5</VersionBuild>
+		<VersionMajor>4</VersionMajor>
+		<VersionMinor>3</VersionMinor>
+		<VersionBuild>12</VersionBuild>
 		<!-- Combine into a single version string -->
 		<VersionPrefix>$(VersionMajor).$(VersionMinor).$(VersionBuild)</VersionPrefix>
 
@@ -50,18 +50,22 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiCss Remove="Resources\Raw\quill-better-table.min.css" />
 	  <MauiCss Remove="Resources\Raw\quill.snow.css" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <None Remove="Resources\Raw\html-docx.js" />
 	  <None Remove="Resources\Raw\mammoth.browser.min.js" />
+	  <None Remove="Resources\Raw\quill-better-table.min.js" />
 	  <None Remove="Resources\Raw\quill.min.js" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\Raw\html-docx.js" />
 	  <EmbeddedResource Include="Resources\Raw\mammoth.browser.min.js" />
+	  <EmbeddedResource Include="Resources\Raw\quill-better-table.min.css" />
+	  <EmbeddedResource Include="Resources\Raw\quill-better-table.min.js" />
 	  <EmbeddedResource Include="Resources\Raw\quill.min.js" />
 	  <EmbeddedResource Include="Resources\Raw\quill.snow.css" />
 	</ItemGroup>
