@@ -14,7 +14,7 @@
 		<!-- Define version components individually -->
 		<VersionMajor>4</VersionMajor>
 		<VersionMinor>3</VersionMinor>
-		<VersionBuild>12</VersionBuild>
+		<VersionBuild>15</VersionBuild>
 		<!-- Combine into a single version string -->
 		<VersionPrefix>$(VersionMajor).$(VersionMinor).$(VersionBuild)</VersionPrefix>
 

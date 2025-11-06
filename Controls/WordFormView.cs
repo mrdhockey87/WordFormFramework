@@ -278,7 +278,7 @@ public partial class WordFormView : ContentView
         var quillJs = GetRes("quill.min.js");
         var mammothJs = GetRes("mammoth.browser.min.js");
         var htmlDocxJs = GetRes("html-docx.js");
-        var rtfToHtmlJs = GetResOptional("rtf-to-html.min.js"); // optional converter
+        var rtfToHtmlJs = GetResOptional("rtf-to-html.min.js");
 
         var disableContextMenu = DeviceInfo.Current.Platform == DevicePlatform.MacCatalyst;
         var disableFlag = disableContextMenu ? "true" : "false";
@@ -290,48 +290,50 @@ public partial class WordFormView : ContentView
         sb.AppendLine("<meta charset='utf-8'>");
         sb.Append("<style>").Append(quillCss).AppendLine("</style>");
         sb.AppendLine(@"<style>");
-        sb.AppendLine(@"html,body{height:100%;margin:0;padding:0;}");
-        sb.AppendLine(@"body{display:flex;flex-direction:column;background:white;}");
-        sb.AppendLine(@"#toolbar{position:sticky;top:0;background:white;z-index:10;display:flex;flex-wrap:wrap;gap:6px;padding:6px;border-bottom:1px solid #ddd;}");
+        sb.AppendLine(@"html,body{height:100%;margin:0;padding:0;background:#ffffff;}");
+        sb.AppendLine(@"body{display:flex;flex-direction:column;}");
         sb.AppendLine(@"#editor{flex:1;min-height:0;}");
         sb.AppendLine(@".wf-img-menu{position:fixed;z-index:9999;background:#fff;border:1px solid #ccc;box-shadow:02px6px rgba(0,0,0,.25);border-radius:4px;font:14px -apple-system,Segoe UI,Arial,sans-serif;min-width:150px;padding:4px;display:none;}");
         sb.AppendLine(@".wf-img-menu button{all:unset;display:block;width:100%;padding:6px10px;cursor:pointer;border-radius:3px;}");
-        sb.AppendLine(@".wf-img-menu button:hover{background:#e6f0ff; }");
+        sb.AppendLine(@".wf-img-menu button:hover{background:#e6f0ff;}");
         sb.AppendLine("</style>");
         sb.AppendLine("</head>");
         sb.AppendLine("<body>");
 
-        sb.AppendLine(@"<div id='toolbar'>");
-        sb.AppendLine(@" <span class='ql-formats><select class='ql-header><option selected></option><option value='1'></option><option value='2'></option><option value='3'></option></select></span>");
-        sb.AppendLine(@" <span class='ql-formats><button class='ql-bold'></button><button class='ql-italic'></button><button class='ql-underline'></button></span>");
-        sb.AppendLine(@" <span class='ql-formats><button class='ql-link'></button><button class='ql-image'></button></span>");
-        sb.AppendLine(@" <span class='ql-formats><button class='ql-list' value='ordered'></button><button class='ql-list' value='bullet'></button></span>");
-        sb.AppendLine(@" <span class='ql-formats><button class='ql-clean'></button></span>");
-        sb.AppendLine(@"</div>");
         sb.AppendLine("<div id='editor'></div>");
         sb.AppendLine("<div class='wf-img-menu' id='wfImgMenu'><button data-action='save'>Save Image...</button></div>");
 
+        // assets
         sb.Append("<script>").Append(quillJs).AppendLine("</script>");
         sb.Append("<script>").Append(mammothJs).AppendLine("</script>");
         sb.Append("<script>").Append(htmlDocxJs).AppendLine("</script>");
-        if (!string.IsNullOrWhiteSpace(rtfToHtmlJs)) sb.Append("<script>").Append(rtfToHtmlJs).AppendLine("</script>");
+        if (!string.IsNullOrWhiteSpace(rtfToHtmlJs))
+            sb.Append("<script>").Append(rtfToHtmlJs).AppendLine("</script>");
 
+        // app script
         sb.AppendLine("<script>");
-        sb.AppendLine(@"function nativePostMessage(message){try{if(window.chrome?.webview?.postMessage)window.chrome.webview.postMessage(message);else if(window.webkit?.messageHandlers?.invokeAction)window.webkit.messageHandlers.invokeAction.postMessage(message);else if(window.native?.postMessage)window.native.postMessage(message);}catch{}} ");
+        sb.AppendLine(@"function nativePostMessage(message){try{if(window.chrome?.webview?.postMessage)window.chrome.webview.postMessage(message);else if(window.webkit?.messageHandlers?.invokeAction)window.webkit.messageHandlers.invokeAction.postMessage(message);else if(window.native?.postMessage)window.native.postMessage(message);}catch{}}");
         sb.Append("const DISABLE_CONTEXT_MENU = ").Append(disableFlag).AppendLine(";");
+
         sb.AppendLine(@"if(DISABLE_CONTEXT_MENU){window.addEventListener('contextmenu',e=>e.preventDefault(),false);} ");
 
-        sb.AppendLine(@"var quill;(function(){var toolbarOptions='#toolbar'; quill=new Quill('#editor',{theme:'snow',modules:{toolbar:toolbarOptions}});})();");
+        // Quill init with full toolbar (auto-generated)
+        sb.AppendLine(@"var quill;(function(){");
+        sb.AppendLine(@" var toolbarOptions = [[{ header: [1,2,3,false] }], ['bold','italic','underline','strike'], [{ 'color': [] }, { 'background': [] }], [{ 'list': 'ordered' }, { 'list': 'bullet' }], [{ 'align': [] }], ['link','image'], ['blockquote','code-block'], ['clean']];");
+        sb.AppendLine(@" quill = new Quill('#editor',{ theme:'snow', modules:{ toolbar: toolbarOptions } });");
+        sb.AppendLine(@"})();");
 
+        // Image context menu
         sb.AppendLine(@"const menu=document.getElementById('wfImgMenu'); function hideMenu(){menu.style.display='none';document.removeEventListener('click',onDocClick,true);} function onDocClick(){hideMenu();} function showMenu(x,y,img){menu.style.display='block'; const W=innerWidth,H=innerHeight,r=menu.getBoundingClientRect(); if(x+r.width>W)x=W-r.width-4; if(y+r.height>H)y=H-r.height-4; menu.style.left=x+'px'; menu.style.top=y+'px'; document.addEventListener('click',onDocClick,true); menu.onclick=ev=>{const btn=ev.target.closest('button'); if(!btn)return; if(btn.getAttribute('data-action')==='save'){ try{ const c=document.createElement('canvas'); c.width=img.naturalWidth||img.width; c.height=img.naturalHeight||img.height; c.getContext('2d').drawImage(img,0,0); const dataUrl=c.toDataURL('image/png'); nativePostMessage(JSON.stringify({type:'saveImage',dataUrl})); }catch{} hideMenu(); }}; }");
         sb.AppendLine(@"document.addEventListener('contextmenu',e=>{const t=e.target; if(t && t.tagName==='IMG'){ e.preventDefault(); showMenu(e.clientX,e.clientY,t);} },false);");
 
         // DOCX import
         sb.AppendLine(@"window.importDocxFromBase64=async function(b64){ try{ var bin=atob(b64); var bytes=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); var result=await mammoth.convertToHtml({arrayBuffer:bytes.buffer}); quill.root.innerHTML=result.value||'<p><em>No content</em></p>'; return true;}catch(e){return false;} };");
 
-        // Simple RTF import fallback
-        sb.AppendLine(@"window.importRtfFromBase64=async function(b64){ try{ var rtf=atob(b64); var plain=rtf.replace(/\\'[0-9a-fA-F]{2}/g,' ').replace(/\\par/gi,'\n').replace(/\\[a-zA-Z]+-?\d* ?/g,'').replace(/[{}]/g,'').trim(); if(!plain) plain='(empty)'; var html='<p>'+plain.replace(/\n+/g,'</p><p>')+'</p>'; quill.root.innerHTML=html; return true;}catch(e){return false;} };");
+        // RTF import fallback
+        sb.AppendLine(@"window.importRtfFromBase64=async function(b64){ try{ var rtf=atob(b64); var plain=rtf.replace(/\'[0-9a-fA-F]{2}/g,' ').replace(/\par/gi,'\n').replace(/\[a-zA-Z]+-?\d* ?/g,'').replace(/[{}]/g,'').trim(); if(!plain) plain='(empty)'; var html='<p>'+plain.replace(/\n+/g,'</p><p>')+'</p>'; quill.root.innerHTML=html; return true;}catch(e){return false;} };");
 
+        // export helpers
         sb.AppendLine(@"function blobToBase64(blob){return new Promise((res,rej)=>{var fr=new FileReader(); fr.onloadend=()=>res(fr.result.split(',')[1]); fr.onerror=rej; fr.readAsDataURL(blob);});}");
         sb.AppendLine(@"window.exportDocx=async function(){ try{ var html='<html><body>'+quill.root.innerHTML+'</body></html>'; var blob=htmlDocx.asBlob(html); return await blobToBase64(blob);}catch(e){return '';} };");
         sb.AppendLine(@"window.exportRtf=function(){ try{ var txt=quill.getText(); txt=txt.replace(/\\/g,'\\\\').replace(/\{/g,'\\{').replace(/\}/g,'\\}').replace(/\r?\n/g,'\\par '); var rtf='{\\rtf1\\ansi\\deff0 '+txt+'}'; return btoa(unescape(encodeURIComponent(rtf))); }catch(e){ return ''; } };");

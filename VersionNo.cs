@@ -32,6 +32,7 @@ namespace WordFormFramework
 }
 /*Version history:
  *
+ * 4.3.15 - Fixed the issue of the menu bar not having all options and taking up too much space. mdail 11-6-25
  * 4.3.12 - Removed the table & protected text support from the rich text editor as it was causing too many issues where the text would 
  *          not show up. The save as rtf works, however it loses the image when saving. The save as Docx just says save failed. mdail 11-6-25
  * 3.2.9 - Added support for open & save rtf docs, add the ability to add protected text that cannot be edited by the user. Added tow
